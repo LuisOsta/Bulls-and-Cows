@@ -1,6 +1,12 @@
 	.data
 test: .asciiz "Test Output"
-.globl test
+
+#welcome, basic messages
+welcomePrompt: .asciiz "We have chosen a 4 letter, word. Let the game begin!"
+
+# user input prompts
+guessPrompt: .asciiz "What will your guess be: "
+giveupPrompt: .asciiz "Do you wish to give up or continue"
 
 #utlity newline
 newline: .asciiz "\n"
@@ -11,7 +17,8 @@ outputEnd: .asciiz "Goodbye. The program has ended."
 
 	.text
 main:
-	
+	la $a0, welcomePrompt
+	jal outputText
 	
 	Exit:
 		li, $v0, 4

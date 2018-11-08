@@ -18,6 +18,7 @@ winningSound:
 	li $a2, 56 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
 	li $a3, 127 # Loads the volume into $a3 (0-127)
 	syscall
+	jr $ra
 	
 LosingSound:
 	li $v0, 31 #31 is the system code for playing sounds
@@ -26,3 +27,4 @@ LosingSound:
 	li $a2, 8 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
 	li $a3, 127 # Loads the volume into $a3 (0-127)
 	syscall
+	jr $ra

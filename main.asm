@@ -309,6 +309,7 @@ win:
 	la $a0, newline      		 
 	syscall
 	
+	#Plays the sound
 	li $v0, 31 #31 is the system code for playing sounds
 	li $a0, 67 #Load the pitch (0-127) into $a0
 	li $a1,1000 #Loads the duration of the sound (in milliseconds) into $a1
@@ -328,6 +329,7 @@ win:
 	
 	
 GameOver:
+	#Plays the sound
 	li $v0, 31 #31 is the system code for playing sounds
 	li $a0, 50 #Load the pitch (0-127) into $a0
 	li $a1,1000 #Loads the duration of the sound (in milliseconds) into $a1

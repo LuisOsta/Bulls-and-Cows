@@ -1,4 +1,3 @@
-	
 	.data
 outputEnd: .asciiz "Goodbye. The Program has ended"
 	

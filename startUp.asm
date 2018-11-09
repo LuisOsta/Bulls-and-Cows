@@ -6,12 +6,23 @@ wordNumber: .word 100
 	.text
 main:
 	jal getRandomInt
-	move $a0, $v0
- 	
+	move $t0, $v0 #the random word(row r)
+	move $t1, $t0#the words leading up to the word(row r -1)
+	
+	sub $t1, $t1, 1
+	
+	mul $t0,$t0, 4 #(multiplies it by the word length)
+	mul $t1, $t1, 4 # as above
+	
+	li $v0, 1
+	la $a0, ($t0)
+	syscall
+	
  	jal openFile
   	move $s6, $v0      # save the file descriptor 
-
-	move $a0, $s6
+	move $a0, $s6	#moves the file descriptor
+	move $a2, $t0 #moves the word byte start
+	
 	jal pickRandomWord
  
 	la $a0, buffer
@@ -35,8 +46,9 @@ pickRandomWord:
   	li   $v0, 14       # system call to read from file
   	move $a0, $s6      # file descriptor 
   	la   $a1, buffer   # address of buffer from which to write
-  	li   $a2, 4       # hardcoded buffer length
-  	syscall 
+  	#la   $a2, 372      # buffer length in a2
+  	syscall
+  	
 openFile:
 	###############################################################
   	# Open (for writing) a file that does not exist

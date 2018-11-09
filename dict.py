@@ -9,7 +9,7 @@ app_id = '8325d9e7'
 app_key = 'fd8d942324121e4a11f8f733847483d9'
 language = 'en'
 word_id = 'Ace'
-url = 'https://od-api.oxforddictionaries.com:443/api/v1/wordlist/'+language+'/lexicalCategory%3Dnoun%2Cadjective?word_length=4&exact=false'
+url = 'https://od-api.oxforddictionaries.com:443/api/v1/wordlist/'+language+'/lexicalCategory%3Dnoun%2Cadjective?word_length=4&exact=false&limit=101'
 #url Normalized frequency
 
 r = requests.get(url, headers = {'app_id' : app_id, 'app_key' : app_key})

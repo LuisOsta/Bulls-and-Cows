@@ -6,6 +6,9 @@ wordToGuess: .asciiz "duck"
 startMessage: .asciiz "Welcome to Bulls and Cows! What difficulty would you like to play on? (4 is the hardest, 0 is easiest)"
 errorMessage: .asciiz "Invalid input. Please try again"
 
+InputError: .asciiz "\nIt appears an invalid character was used.\n"
+DupeError: .asciiz "\nSorry. You can't repeat characters.\n"
+
 transition: .asciiz " Excellent! The number of guesses you have is : "
 guessLeft: .asciiz "The number of guesses you have left is: "
 newline: .asciiz "\n"
@@ -148,8 +151,107 @@ guessSection:
 	lb $s2,2($t4)			#the third character is in $t2
 	lb $s3,3($t4)			#the fourth character is in $t3
 	
-	add $t0,$zero,$zero
+	############################################### INPUT VALIDATION ##########################################################
+	#Ok, have to check two things, whether a-z or A-Z and if any dupes.  Can strtoupper during the checks.
+	# A is 65, Z is 90, a is 97, z is 122
+	# if (((a>=65)&&(a<=70)) || ((a>=97)&&(a<=122))
 	
+	#addi $t5, $zero, 48
+	#blt $s0, $t5, UserInputError
+	#addi $t5, $zero, 57
+	#ble $s0, $t5, SecondCheck
+	addi $t5, $zero, 65 # 65 is a
+	blt $s0, $t5, UserInputError # branches is ASCII code is less than 65
+	addi $t5, $zero, 90
+	ble $s0, $t5, SecondCheck
+	addi $t5, $zero, 97
+	blt $s0, $t5, UserInputError # branches is ASCII code is less than 97
+	addi $t5, $zero, 122
+	ble $s0, $t5, FirstFix
+	j UserInputError
+FirstFix: # If the first character is lowercase, subtract 32 bits to make the character uppercase
+	sub $s0, $s0, 32
+SecondCheck: # This loop checks if the second character is within bounds 
+	
+	#addi $t5, $zero, 48
+	#blt $s1, $t5, UserInputError
+	#addi $t5, $zero, 57
+	#ble $s1, $t5, ThirdCheck
+	addi $t5, $zero, 65
+	blt $s1, $t5, UserInputError
+	addi $t5, $zero, 90
+	ble $s1, $t5, ThirdCheck
+	addi $t5, $zero, 97
+	blt $s1, $t5, UserInputError
+	addi $t5, $zero, 122
+	ble $s1, $t5, SecondFix
+	j UserInputError
+SecondFix: # If the second character is lowercase, subtract 32 bits to make the character uppercase
+	sub $s1, $s1, 32
+ThirdCheck: # This loop checks if the third character is within bounds
+
+	#addi $t5, $zero, 48
+	#blt $s2, $t5, UserInputError
+	#addi $t5, $zero, 57
+	#ble $s2, $t5, FourthCheck
+	addi $t5, $zero, 65
+	blt $s2, $t5, UserInputError
+	addi $t5, $zero, 90
+	ble $s2, $t5, FourthCheck
+	addi $t5, $zero, 97
+	blt $s2, $t5, UserInputError
+	addi $t5, $zero, 122
+	ble $s2, $t5, ThirdFix
+	j UserInputError
+ThirdFix: # If the third character is lowercase, subtract 32 bits to make the character uppercase
+	sub $s2, $s2, 32
+FourthCheck: # This loop checks if the fourth character is within bounds
+
+	#addi $t5, $zero, 48
+	#blt $s3, $t5, UserInputError
+	#addi $t5, $zero, 57
+	#ble $s3, $t5, AfterCheck
+	addi $t5, $zero, 65
+	blt $s3, $t5, UserInputError
+	addi $t5, $zero, 90
+	ble $s3, $t5, AfterCheck
+	addi $t5, $zero, 97
+	blt $s3, $t5, UserInputError
+	addi $t5, $zero, 122
+	ble $s3, $t5, FourthFix
+	j UserInputError
+FourthFix: # If the fourth character is lowercase, subtract 32 bits to make the character uppercase
+	sub $s3, $s3, 32
+AfterCheck:
+	# Need to check that there are no duplicate characters
+	beq $s0, $s1, UserDupe # compare 1st to 2nd
+	beq $s0, $s2, UserDupe # compare 1st to 3rd
+	beq $s0, $s3, UserDupe # compare 1st to 4th
+	beq $s1, $s2, UserDupe # compare 2nd to 3rd
+	beq $s1, $s3, UserDupe # compare 2nd to 4th
+	beq $s2, $s3, UserDupe # compare 3rd to 4th
+	j next
+	#end error checking
+	############################################### END OF CHECK     ##########################################################
+	
+	# Display invlaid characters used 
+	UserInputError:
+	li $v0, 4
+	la $t0, InputError
+	add $a0, $t0, $zero
+	syscall
+	j guessSection
+	
+	# Display message about duplicates
+	UserDupe:
+	li $v0, 4
+	la $t0, DupeError
+	add $a0, $t0, $zero
+	syscall
+	j guessSection
+	add $t0,$zero,$zero            # reset $t0
+	
+	next:
 	sb $s0,currentGuessArray($t0)
 	addi $t0,$t0,1
 	sb $s1,currentGuessArray($t0)

@@ -54,10 +54,14 @@ main:
 
 substringBuffer: #receives the starting index in #a0, and final index in $a1, returns the substringed version of the buffer
 	li $t1, 0 #counter
-	move $t2, $a1 # the word length(equal to 4 in our case)
-	la $t3, buffer
 	
+	move $t2, $a1 # the word length(equal to 4 in our case)
+	sub $t2, $t2,2
+	
+	
+	la $t3, buffer
 	addu $t4, $t3, $a0  # BUFFER POINTER sets t4 to the base string value  assumes x is in $a0
+	
 	Loop:
 		beq $t1, $t2, LoopExit
 	

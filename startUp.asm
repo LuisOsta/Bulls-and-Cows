@@ -5,22 +5,11 @@ wordNumber: .word 100
 newline: .asciiz "\n"
 word: .asciiz "xxxx"
 	.text
-main:
+getWord:
 	jal getRandomInts
 	move $s0, $v0 #the random word(row r) multiplied by 4
 	move $s1, $v1#the words leading up to the word(row r -1) multiplied by 4; used for the substring
-	
-	#################################################
-	#PRINTS OUT THE RANDOM INDEX OF THE WORD TO USE
-	li $v0, 1
-	la $a0, ($s0) #prints out the random integer
-	syscall
-	
-	la $a0, newline
-	li $v0, 4
-	syscall
-	
-	
+		
 	################################################
 	#OPENS THE DICTIONARY FILE
  	jal openFile
@@ -39,18 +28,15 @@ main:
 	sub $a1, $s0, $s1
 	jal substringBuffer # v0, v1, v2, v3, ..v_n contain the letters of the word(for our case it will always be 4  letters)
 	
-	la  $a0, word
-	li $v0, 4
-	syscall
-	Exit:
-	  ###############################################################
-  		# Close the file 
-		li   $v0, 16       # system call for close file
-  		move $a0, $s6      # file descriptor to close
- 		syscall            # close file
- 		
-		li $v0, 10
-		syscall
+	###############################################################
+  	# Close the file & Return Value
+	li   $v0, 16       # system call for close file
+  	move $a0, $s6      # file descriptor to close
+ 	syscall            # close file
+ 	
+ 	la $v0, word
+ 	jr $ra
+ 	
 
 substringBuffer: #receives the starting index in #a0, and final index in $a1, returns the substringed version of the buffer
 	li $t1, 0 #counter

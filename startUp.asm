@@ -2,10 +2,11 @@
 buffer: .space 1024
 filename: .asciiz "dictionary.txt"
 wordNumber: .word 100
-newline: .asciiz "\n"
 word: .asciiz "xxxx"
 	.text
 getWord:
+	addi $sp, $sp, -4
+	sw $ra, 0($sp) # stores $ra (location of original pointer)
 	jal getRandomInts
 	move $s0, $v0 #the random word(row r) multiplied by 4
 	move $s1, $v1#the words leading up to the word(row r -1) multiplied by 4; used for the substring
@@ -35,9 +36,10 @@ getWord:
  	syscall            # close file
  	
  	la $v0, word
+ 	lw $ra, 0($sp) #restore ra (from previous call)
+	addi $sp, $sp, 4
+	
  	jr $ra
- 	
-
 substringBuffer: #receives the starting index in #a0, and final index in $a1, returns the substringed version of the buffer
 	li $t1, 0 #counter
 	
@@ -84,11 +86,12 @@ openFile:
 getRandomInts:
 	lw $a1, wordNumber
     	li $v0, 42   #random
-    	syscall
-    	
+    	syscall 	
    	sub $v1, $a0, 1
    	move $v0, $a0
    	
    	mul $v0,$v0, 6 #(multiplies it by the word length)
 	mul $v1, $v1, 6 # as above
    	jr $ra
+
+.globl getWord

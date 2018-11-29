@@ -18,7 +18,7 @@ loseMessage: .asciiz "Sorry! You weren't able to figure out the word. The word w
 winMessage: .asciiz "Congratulations! You were able to figure it out! The word, as you know, was "
 quitQuestion: .asciiz "If you want to quit at any time, just type 'quit' when asked to guess a word."
 timeMessge: .asciiz "\nYou spent at total of "
-seconds: .asciiz " seconds"
+seconds: .asciiz " seconds\n"
 
 guessRequest: .asciiz "Guess a four letter word! "
 quitMessage: .asciiz "You opted out! That's okay. The word was: "
@@ -576,9 +576,11 @@ winHandler:
 	li $v0, 4 			#prints the time spent
 	la $a0, timeMessge
 	syscall
-	li $v0, 4
+	
+	li $v0, 1
 	move $a0, $s6
 	syscall
+	
 	li $v0, 4
 	la $a0, seconds
 	syscall

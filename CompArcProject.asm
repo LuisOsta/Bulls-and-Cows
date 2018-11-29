@@ -17,6 +17,8 @@ newline: .asciiz "\n"
 loseMessage: .asciiz "Sorry! You weren't able to figure out the word. The word was: " 
 winMessage: .asciiz "Congratulations! You were able to figure it out! The word, as you know, was "
 quitQuestion: .asciiz "If you want to quit at any time, just type 'quit' when asked to guess a word."
+timeMessge: .asciiz "You spent at total of "
+seconds: .asciiz " seconds"
 
 guessRequest: .asciiz "Guess a four letter word! "
 quitMessage: .asciiz "You opted out! That's okay. The word was: "
@@ -146,6 +148,8 @@ validDifficulty:
 	la $a0, newline      		 
 	syscall
 	syscall
+	
+	jal setTimer
 	
 ################################## Get User Guess #######################################
 
@@ -561,10 +565,23 @@ winHandler:
 	la $a0, newline      		 
 	syscall
 
-
 	li $v0, 4	 		# print win string
 	la $a0, winMessage	 	
 	syscall 	 		
+	
+	
+	jal getTime 			#gets time spent
+	
+	
+	li $v0, 4 			#prints the time spent
+	la $a0, timeMessage
+	syscall
+	li $v0, 4
+	move $a0, $s6
+	syscall
+	li $v0, 4
+	li $a0, seconds
+	syscall
 	
 	li $v0, 4	 		# show them the word they got right
 	la $a0, wordToGuess	 	
@@ -620,6 +637,22 @@ lossHandler:
 	syscall
 	
 	j Exit
+
+#Starts the timer for the length of the game
+#Stores the time i  $s7
+setTimer:
+	li $v0, 30
+	syscall
+	move $s7, $a0
+	jr $ra	
+
+#Stores the current elapsed time in seconds in $s6
+getTime:
+	li $v0, 30
+	syscall
+	move $s6, $a0
+	sub $s6, $s6, $s7
+	jr $ra
 	
 ################################################   Exit    ####################################################
 	

@@ -574,13 +574,13 @@ winHandler:
 	
 	
 	li $v0, 4 			#prints the time spent
-	la $a0, timeMessage
+	la $a0, timeMessge
 	syscall
 	li $v0, 4
 	move $a0, $s6
 	syscall
 	li $v0, 4
-	li $a0, seconds
+	la $a0, seconds
 	syscall
 	
 	li $v0, 4	 		# show them the word they got right

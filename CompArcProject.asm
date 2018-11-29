@@ -17,7 +17,7 @@ newline: .asciiz "\n"
 loseMessage: .asciiz "Sorry! You weren't able to figure out the word. The word was: " 
 winMessage: .asciiz "Congratulations! You were able to figure it out! The word, as you know, was "
 quitQuestion: .asciiz "If you want to quit at any time, just type 'quit' when asked to guess a word."
-timeMessge: .asciiz "You spent at total of "
+timeMessge: .asciiz "\nYou spent at total of "
 seconds: .asciiz " seconds"
 
 guessRequest: .asciiz "Guess a four letter word! "

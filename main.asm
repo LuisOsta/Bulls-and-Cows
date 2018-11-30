@@ -3,7 +3,7 @@
 outputEnd: .asciiz "Goodbye. The Program has ended."
 	
 wordToGuess: .asciiz "duck"
-	
+.globl wordToGuess
 startMessage1: .asciiz "Welcome to Bulls and Cows!"
 startMessage2: "What difficulty would you like to play on? (4 is the hardest, 0 is easiest): "
 errorMessage: .asciiz "Invalid input. Please try again."
@@ -43,7 +43,10 @@ main:
 	# Here we store the random target word in memory as a byte array so that individual characters may be easily 
 	# accessed. 
 	jal getWord
-	#lw $v0, wordToGuess
+	
+	li $v0, 4
+	la $a0, wordToGuess
+	syscall
 	
 	la $t4, wordToGuess	
 	lb $s0,0($t4)			#the first character is in $t0
@@ -439,8 +442,7 @@ lossHandler:
 	la $a0, newline      		 
 	syscall
 	
-	j Exit
-	
+	j Exit	
 ################################################   Exit    ####################################################
 	
 Exit:

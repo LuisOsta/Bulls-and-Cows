@@ -19,9 +19,6 @@ getWord:
   	move $s6, $v0      # save the file descriptor
  	
  	################################################
- 	li $v0, 1
- 	move $a0, $s6
- 	syscall
  	
  	###############################################
  	#LOADS THE BUFFER WITH ALL WORDS LEADING UP(INCLUSIVE) WORD: AND THEN RETURNS THE SUBSTRINGED RESULT
@@ -59,7 +56,7 @@ substringBuffer: #receives the starting index in #a0, and final index in $a1, re
 	
 		#lb $v0,($t4)      # read the 1st character
 		lb $t0, ($t4) #loads the character in the buffer
-		sb $t0, word($t1) #appends it to the corresponding index of the word
+		sb $t0, wordToGuess($t1) #appends it to the corresponding index of the word
 		
 		addu $t4, $t4, 1 #adds the counter to the buffer pointer
 		addi $t1, $t1, 1 #adds 1 to the counter

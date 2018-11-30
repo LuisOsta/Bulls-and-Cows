@@ -3,21 +3,25 @@ buffer: .space 1024
 filename: .asciiz "dictionary.txt"
 wordNumber: .word 100
 word: .asciiz "xxxx"
+test: .asciiz "test"
 	.text
 getWord:
 	addi $sp, $sp, -4
 	sw $ra, 0($sp) # stores $ra (location of original pointer)
+
 	jal getRandomInts
 	move $s0, $v0 #the random word(row r) multiplied by 4
 	move $s1, $v1#the words leading up to the word(row r -1) multiplied by 4; used for the substring
-		
+	
 	################################################
 	#OPENS THE DICTIONARY FILE
  	jal openFile
   	move $s6, $v0      # save the file descriptor
  	
  	################################################
- 	
+ 	li $v0, 1
+ 	move $a0, $s6
+ 	syscall
  	
  	###############################################
  	#LOADS THE BUFFER WITH ALL WORDS LEADING UP(INCLUSIVE) WORD: AND THEN RETURNS THE SUBSTRINGED RESULT

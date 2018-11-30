@@ -43,11 +43,7 @@ main:
 	# Here we store the random target word in memory as a byte array so that individual characters may be easily 
 	# accessed. 
 	jal getWord
-	lw $v0, wordToGuess
-	
-	li $v0, 4	 		# prep for string output
-	la $a0, wordToGuess	 	
-	syscall 
+	#lw $v0, wordToGuess
 	
 	la $t4, wordToGuess	
 	lb $s0,0($t4)			#the first character is in $t0

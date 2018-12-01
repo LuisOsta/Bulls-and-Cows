@@ -23,6 +23,9 @@ quitMessage: .asciiz "You opted out! That's okay. The word was: "
 	
 bullString: .asciiz "The number of bulls is: "
 cowString: .asciiz "The number of cows is: "
+
+secondsString: .asciiz "\nThat took "
+secondsString2: .asciiz " Seconds\n"
 	
 Bull: .word 0
 Cow: .word 0
@@ -146,6 +149,8 @@ validDifficulty:
 	la $a0, newline      		 
 	syscall
 	syscall
+	
+	jal startTimer
 	
 ################################## Get User Guess #######################################
 
@@ -545,6 +550,26 @@ winHandler:
 	li $v0, 4       		# Print newline (for readability)
 	la $a0, newline      		 
 	syscall
+	
+	jal getTime
+	
+	secondsString
+	
+	li $v0, 4       		#prints "That took ___"
+	la $a0, secondsString      		 
+	syscall
+	
+	li $v0, 1       		#prints how many seconds it took
+	move $a0, $s6      		 
+	syscall
+	
+	li $v0, 4       		#prints "__ seconds"
+	la $a0, secondsString2      		 
+	syscall
+	
+	li $v0, 4       		# Print newline (for readability)
+	la $a0, newline      		 
+	syscall
 
 
 	li $v0, 4	 		# print win string
@@ -605,6 +630,20 @@ lossHandler:
 	syscall
 	
 	j Exit
+	
+startTimer:
+	li $v0, 30
+	syscall
+	move $s7, $a0
+	jr $ra
+	
+getTime:
+	li $v0, 30
+	syscall
+	move $s6, $a0
+	sub $s6, $s6, $t0
+	div $s6, $s6, 1000
+	jr $ra
 	
 ################################################   Exit    ####################################################
 	

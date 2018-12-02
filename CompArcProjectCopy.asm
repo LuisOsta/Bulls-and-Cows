@@ -285,6 +285,14 @@ UserInputError:
 	la $t0, InputError
 	add $a0, $t0, $zero
 	syscall
+	
+	li $v0, 31 			# Play a sound on Error
+	li $a0, 30 
+	li $a1, 500 
+	li $a2, 58 
+	li $a3, 127 
+	syscall
+	
 	j guessSection
 	
 	# Display message about duplicates
@@ -293,6 +301,14 @@ UserDupe:
 	la $t0, DupeError
 	add $a0, $t0, $zero
 	syscall
+	
+	li $v0, 31 			# Play a sound on Error
+	li $a0, 30 
+	li $a1, 500 
+	li $a2, 58 
+	li $a3, 127 
+	syscall
+	
 	j guessSection
 	add $t0,$zero,$zero            # reset $t0
 	add $t1,$zero,$zero  

@@ -10,7 +10,6 @@ errorMessage: .asciiz "Invalid input. Please try again."
 
 transition: .asciiz "Excellent! The number of guesses you have is: "
 guessLeft: .asciiz "The number of guesses you have left is: "
-recentGuessMessage: .asciiz "You guessed: "
 newline: .asciiz "\n"
 .globl newline
 
@@ -19,10 +18,13 @@ winMessage: .asciiz "Congratulations! You were able to figure it out! The word, 
 quitQuestion: .asciiz "If you want to quit at any time, just type 'quit' when asked to guess a word."
 
 guessRequest: .asciiz "Guess a four letter word! "
-quitMessage: .asciiz "You opted out! That's okay. The word was "
+quitMessage: .asciiz "You opted out! That's okay. The word was: "
 	
 bullString: .asciiz "The number of bulls is: "
 cowString: .asciiz "The number of cows is: "
+
+secondsString: .asciiz "\nThat took "
+secondsString2: .asciiz " Seconds\n"
 	
 Bull: .word 0
 Cow: .word 0
@@ -32,8 +34,13 @@ numGuessDifficulty: .word 25,20,15,10,5
 currentGuess: .space  5
 	
 correctWordArray: .space 5
-guessArray: .space 5
-	
+currentGuessArray: .space 5
+
+
+
+#SUBJECT TO REMOVE
+InputError: .asciiz "\nIt appears an invalid character was used.\n"
+DupeError: .asciiz "\nSorry. You can't repeat characters.\n"
 	
 	.text
 	
@@ -48,7 +55,7 @@ main:
 	la $a0, wordToGuess
 	syscall
 	
-	la $t4, wordToGuess	
+	la $t4, wordToGuess		
 	lb $s0,0($t4)			#the first character is in $t0
 	lb $s1,1($t4)			#the second character is in $t1
 	lb $s2,2($t4)			#the third character is in $t2
@@ -147,6 +154,8 @@ validDifficulty:
 	syscall
 	syscall
 	
+	jal startTimer
+	
 ################################## Get User Guess #######################################
 
 	# In this section, we reset previous bull and cow numbers, see if the user has any guesses left
@@ -190,17 +199,119 @@ guessSection:
 	lb $s3,3($t4)			#the fourth character is in $s3
 	
 	add $t0,$zero,$zero		# reset $t0
-				
-	sb $s0,guessArray($t0)	# I saved the bytes again into memory... in hindsight maybe don't need this
+	
+############################################### INPUT VALIDATION ##########################################################
+	#Ok, have to check two things, whether a-z or A-Z and if any dupes.  Can strtoupper during the checks.
+	# A is 65, Z is 90, a is 97, z is 122
+	# if (((a>=65)&&(a<=70)) || ((a>=97)&&(a<=122))
+	
+	
+	addi $t5, $zero, 65 
+	blt $s0, $t5, UserInputError 	# branches is ASCII code is less than 65. guess[0] < ASCII(A)
+	addi $t5, $zero, 90
+	ble $s0, $t5, FirstFix	     	# IF ASCII[A]<=guess[0]<=ASCII[Z] we need to lowercase our letter
+	addi $t5, $zero, 97
+	blt $s0, $t5, UserInputError	# branches is ASCII code is less than 97 but greater than 90 (Not a valid char)
+	addi $t5, $zero, 122
+	ble $s0, $t5, SecondCheck  	# If lowercase, we branch to check the second letter
+	j UserInputError
+	
+FirstFix: 	
+					# If the first character is uppercase, add 32 to make the character lowercase
+	add $s0, $s0, 32 
+SecondCheck: 				# This loop checks if the second character is within bounds 
+	
+	
+	addi $t5, $zero, 65	     	# branches is ASCII code is less than 65. guess[1] < ASCII(A)
+	blt $s1, $t5, UserInputError 
+	addi $t5, $zero, 90	     	# IF ASCII[A]<=guess[1]<=ASCII[Z] we need to lowercase our letter
+	ble $s1, $t5, SecondFix
+	addi $t5, $zero, 97	     	# branches is ASCII code is less than 97 but greater than 90 (Not a valid char)
+	blt $s1, $t5, UserInputError
+	addi $t5, $zero, 122		# If lowercase, we branch to check the second letter
+	ble $s1, $t5, ThirdCheck
+	j UserInputError
+SecondFix: 				# If the second character is uppercase, add 32 to make the character lowercase
+	add $s1, $s1, 32
+	
+ThirdCheck: 				# This loop checks if the third character is within bounds
+
+	addi $t5, $zero, 65	   	# branches is ASCII code is less than 65. guess[2] < ASCII(A)
+	blt $s2, $t5, UserInputError
+	addi $t5, $zero, 90		# IF ASCII[A]<=guess[2]<=ASCII[Z] we need to lowercase our letter
+	ble $s2, $t5, ThirdFix
+	addi $t5, $zero, 97	   	 # branches is ASCII code is less than 97 but greater than 90 (Not a valid char)
+	blt $s2, $t5, UserInputError
+	addi $t5, $zero, 122		# If lowercase, we branch to check the second letter
+	ble $s2, $t5, FourthCheck
+	j UserInputError
+	
+ThirdFix: 				# If the third character is uppercase, add 32 to make the character lowercase
+	add $s2, $s2, 32
+	
+FourthCheck: 				# This loop checks if the fourth character is within bounds
+	
+	addi $t5, $zero, 65		# branches is ASCII code is less than 65. guess[3] < ASCII(A)
+	blt $s3, $t5, UserInputError
+	addi $t5, $zero, 90		# IF ASCII[A]<=guess[3]<=ASCII[Z] we need to lowercase our letter
+	ble $s3, $t5,FourthFix
+	addi $t5, $zero, 97         	# branches is ASCII code is less than 97 but greater than 90 (Not a valid char)
+	blt $s3, $t5, UserInputError
+	addi $t5, $zero, 122		# If lowercase, we branch to check the second letter
+	ble $s3, $t5, AfterCheck
+	j UserInputError
+	
+FourthFix: 				# If the third character is uppercase, add 32 to make the character lowercase
+	add  $s3, $s3, 32
+	
+	
+	
+	
+AfterCheck:
+	# Need to check that there are no duplicate characters
+	beq $s0, $s1, UserDupe 	# compare 1st to 2nd
+	beq $s0, $s2, UserDupe # compare 1st to 3rd
+	beq $s0, $s3, UserDupe # compare 1st to 4th
+	beq $s1, $s2, UserDupe # compare 2nd to 3rd
+	beq $s1, $s3, UserDupe # compare 2nd to 4th
+	beq $s2, $s3, UserDupe # compare 3rd to 4th
+	j next
+	#end error checking
+############################################### END OF CHECK     ##########################################################
+	
+	# Display invlaid characters used 
+UserInputError:
+	li $v0, 4
+	la $t0, InputError
+	add $a0, $t0, $zero
+	syscall
+	j guessSection
+	
+	# Display message about duplicates
+UserDupe:
+	li $v0, 4
+	la $t0, DupeError
+	add $a0, $t0, $zero
+	syscall
+	j guessSection
+	add $t0,$zero,$zero            # reset $t0
+	add $t1,$zero,$zero  
+	add $t2,$zero,$zero   
+	add $t3,$zero,$zero   
+	add $t4,$zero,$zero        
+	
+next:
+	sb $s0,currentGuessArray($t0)	# our values are good! Save them into memory!
 	addi $t0,$t0,1			# I figured we might want them for something
-	sb $s1,guessArray($t0)
+	sb $s1,currentGuessArray($t0)
 	addi $t0,$t0,1
-	sb $s2,guessArray($t0)
+	sb $s2,currentGuessArray($t0)
 	addi $t0,$t0,1
-	sb $s3,guessArray($t0)
-	
-	# Well the user might have asked to quit! We need to check that
-	
+	sb $s3,currentGuessArray($t0)
+							
+										
+													
+###################################################### Quit Check ##############################################################		
 quitChecker: 
 	li $t0, 113 #q			# Individually checks each byte in the guessed word to see if they
 	bne $s0,$t0,bullsCounter	# match the word 'quit'. If there is a single mismatch it branches to 
@@ -223,7 +334,41 @@ quitChecker:
 	
 	li $v0, 4	 		# display correct word
 	la $a0, wordToGuess	 	
-	syscall 	 		
+	syscall 
+	
+	li $v0, 31 #31 is the system code for playing sounds
+	li $a0, 66 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 47 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+	
+	li $v0, 32 #31 is the system code for sleep
+	li $a0, 500 #Load the pitch (0-127) into $a0
+	syscall	 		
+	
+	li $v0, 31 #31 is the system code for playing sounds
+	li $a0, 67 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 47 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+	
+	li $v0, 32 #31 is the system code for sleep
+	li $a0, 500 #Load the pitch (0-127) into $a0
+	syscall	 
+	li $v0, 31 #31 is the system code for playing sounds
+	li $a0, 62 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 47 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+	
+		 		
+	
+	
+		 			
+	
 	
 	j Exit				# Game over so end program
 	
@@ -240,7 +385,7 @@ bullsCounter:
 bullLoop:				# loop that will go through the Arrays representing both the target word and user guess
 	beq $t0,$t4 exitBullsCount	# If there is a match, handle it with the Match label
 	lb $s1,correctWordArray($t0)	# if not look at the next two charcaters and if those are outside the array we are done
-	lb $s2,guessArray($t0)
+	lb $s2,currentGuessArray($t0)
 	beq $s1,$s2 bullMatch
 	addi $t0,$t0,1			# update byte array index
 	j bullLoop	
@@ -274,7 +419,7 @@ outerCowLoop:				# outerCowLoop is our outer for loop. We check each byte in the
 
 	beq $t0,$t4,exitCowCount	# Are we at the end of currentGuessArray? If so we exit
 	
-	lb $s1,guessArray($t0)		# load in values of each array
+	lb $s1,currentGuessArray($t0)		# load in values of each array
 	lb $s2,correctWordArray($t1)
 	
 	beq $s1,$s2 cowMatch		# if the two charcters match go to the cowMatch label
@@ -313,19 +458,6 @@ exitCowCount:
 	# transitioning to the next guess, and losing the game
 	
 	# Display bulls and cows for the most recent guess
-	
-	
-	li $v0,4			# print newline
-	la $a0, newline
-	syscall
-	
-	li $v0, 4			# display precursor message for most recent guess
-	la $a0, recentGuessMessage
-	syscall
-	
-	li $v0, 4			# display most recent guess
-	la $a0, currentGuess
-	syscall
 	
 	li $v0, 4       		# Print newline (for readability)
 	la $a0, newline      		 
@@ -390,13 +522,53 @@ exitCowCount:
 
 	# Handle the user winning!
 	
-winHandler:
-	#Plays sound
+winHandler:	
 	li $v0, 31 #31 is the system code for playing sounds
-	li $a0, 67 #Load the pitch (0-127) into $a0
-	li $a1,1000 #Loads the duration of the sound (in milliseconds) into $a1
-	li $a2, 8 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
-	li $a3, 127 # Loads the volume into $a3 (0-127)
+	li $a0, 66 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 0 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+	
+	li $v0, 32 #31 is the system code for sleep
+	li $a0, 1000 #Load the pitch (0-127) into $a0
+	syscall	 		
+	
+	li $v0, 31 #31 is the system code for playing sounds
+	li $a0, 70 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 0 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+	
+	li $v0, 32 #31 is the system code for sleep
+	li $a0, 1000 #Load the pitch (0-127) into $a0
+	syscall	 
+	li $v0, 31 #31 is the system code for playing sounds
+	li $a0, 73 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 0 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+	
+	li $v0, 4       		# Print newline (for readability)
+	la $a0, newline      		 
+	syscall
+	
+	jal getTime
+	
+	#secondsString
+	
+	li $v0, 4       		#prints "That took ___"
+	la $a0, secondsString      		 
+	syscall
+	
+	li $v0, 1       		#prints how many seconds it took
+	move $a0, $s6      		 
+	syscall
+	
+	li $v0, 4       		#prints "__ seconds"
+	la $a0, secondsString2      		 
 	syscall
 	
 	li $v0, 4       		# Print newline (for readability)
@@ -422,17 +594,36 @@ winHandler:
 	# We need to handle the case the user lost!
 	
 lossHandler:
-	#Plays sound
+	
+	#Plays the sound
 	li $v0, 31 #31 is the system code for playing sounds
-	li $a0, 50 #Load the pitch (0-127) into $a0
-	li $a1,1000 #Loads the duration of the sound (in milliseconds) into $a1
-	li $a2, 56 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
-	li $a3, 127 # Loads the volume into $a3 (0-127)
+	li $a0, 30 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 58 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+	#Plays the sound
+	#Plays the sound
+	li $v0, 32 #31 is the system code for sleep
+	li $a0, 1000 #Load the pitch (0-127) into $a0
 	syscall
 	
+	#Plays the sound
+	li $v0, 31 #31 is the system code for playing sounds
+	li $a0, 25 #Load the pitch (0-127) into $a0
+	li $a1, 1000 #Loads the duration of the sound (in milliseconds) into $a1
+	li $a2, 58 # Loads the instrument into $a2 (Table at : http://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html )
+	li $a3, 127 # Loads the volume into $a3 (0-127
+	syscall
+
+	#Plays the sound
+	
+	
+
 	li $v0, 4	 		# print loss message
 	la $a0, loseMessage	 	
-	syscall 	 		
+	syscall 	 	
+	
 	
 	li $v0, 4	 		# display correct word
 	la $a0, wordToGuess	 	
@@ -442,10 +633,30 @@ lossHandler:
 	la $a0, newline      		 
 	syscall
 	
-	j Exit	
+	j Exit
+	
+startTimer:
+	li $v0, 30
+	syscall
+	move $s7, $a0
+	jr $ra
+	
+getTime:
+	li $v0, 30
+	syscall
+	move $s6, $a0
+	sub $s6, $s6, $t0
+	div $s6, $s6, 1000
+	jr $ra
+	
 ################################################   Exit    ####################################################
 	
 Exit:
+	li $v0, 4       		#Print newline
+	la $a0, newline      		 
+	syscall
+
+
 	li, $v0, 4
 	la, $a0, outputEnd   		# Denotes the output being run
 	syscall

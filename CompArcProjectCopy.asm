@@ -556,15 +556,14 @@ winHandler:
 	syscall
 	
 	jal getTime
-	
-	#secondsString
+	move $t1, $v0
 	
 	li $v0, 4       		#prints "That took ___"
 	la $a0, secondsString      		 
 	syscall
 	
 	li $v0, 1       		#prints how many seconds it took
-	move $a0, $s6      		 
+	move $a0, $t1     		 
 	syscall
 	
 	li $v0, 4       		#prints "__ seconds"
@@ -645,8 +644,10 @@ getTime:
 	li $v0, 30
 	syscall
 	move $s6, $a0
-	sub $s6, $s6, $t0
+	sub $s6, $s6, $s7
 	div $s6, $s6, 1000
+	
+	move $v0,$s6
 	jr $ra
 	
 ################################################   Exit    ####################################################

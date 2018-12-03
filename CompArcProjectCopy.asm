@@ -51,10 +51,6 @@ main:
 	# accessed. 
 	jal getWord
 	
-	li $v0, 4
-	la $a0, wordToGuess
-	syscall
-	
 	la $t4, wordToGuess		
 	lb $s0,0($t4)			#the first character is in $t0
 	lb $s1,1($t4)			#the second character is in $t1

@@ -123,6 +123,14 @@ validDifficulty:
 	la $a0, newline      		 
 	syscall
 	
+	li $v0, 4			#prints the slected word
+	la $a0, correctWordArray
+	syscall
+	
+	li $v0, 4       		 #Print newline 
+	la $a0, newline      		 
+	syscall
+	
 	li $v0, 4	 		# Begin message displaying how many guesses the user starts with
 	la $a0, transition	 		
 	syscall 	 			
